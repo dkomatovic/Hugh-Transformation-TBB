@@ -2,18 +2,18 @@
 HOUGH TRANSFORM ANALYSIS REPORT
 ========================================
 Processing mode: Parallel
-Image title: coskasta_zgrada
+Image title: zgrade_amsterdam
 Image dimensions: 0 x 0, channels: 0
-Accumulator threshold: 396
+Accumulator threshold: 496
 
 Timings (milliseconds):
-  Grayscale: 8 ms
-  Edge detection: 30 ms
-  Hough transform: 723 ms
-  Line detection: 21 ms
+  Grayscale: 53 ms
+  Edge detection: 143 ms
+  Hough transform: 809 ms
+  Line detection: 6 ms
 
 (along with loading, and saving)
-Total duration: 1970 ms
+Total duration: 4320 ms
 
-Number of lines detected: 187
+Number of lines detected: 926
 ========================================

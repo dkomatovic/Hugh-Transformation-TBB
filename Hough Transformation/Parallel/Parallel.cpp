@@ -10,6 +10,19 @@
 
 namespace fs = std::filesystem;
 
+struct ImageJob {
+    fs::path imgPath;
+    Image original;
+    Image gray;
+    Image edges;
+    std::vector<std::vector<int>> accumulator;
+    std::vector<Line> lines;
+    Image result;
+    Report report;
+    std::chrono::steady_clock::time_point totalStart;
+    std::chrono::steady_clock::time_point totalEnd;
+};
+
 int ProcessAccumulatorAndGetThreshold(const std::vector<std::vector<int>>& accumulator, Report& report) {
     int maxVal = 0;
     for (const auto& row : accumulator)
@@ -25,6 +38,93 @@ int ProcessAccumulatorAndGetThreshold(const std::vector<std::vector<int>>& accum
     report.accumulatorHistogram = hist;
 
     return static_cast<int>(0.70 * maxVal);
+}
+
+#include "oneapi/tbb/flow_graph.h"
+using namespace oneapi::tbb::flow;
+
+void processImagesWithFlowGraph(std::string inputFolder, std::string outputFolder) {
+    tbb::flow::graph g;
+
+    function_node<fs::path, ImageJob> loadNode(g, 1, [](fs::path p) -> ImageJob {
+        ImageJob job;
+        job.totalStart = std::chrono::steady_clock::now();
+        job.imgPath = p;
+        job.original = LoadImageFromFile(p);
+        job.report.imgTitle = p.stem().string();
+        job.report.processingMode = "Parallel";
+        return job;
+        });
+
+    function_node<ImageJob, ImageJob> grayNode(g, unlimited, [](ImageJob job) -> ImageJob {
+        auto start = std::chrono::steady_clock::now();
+        job.gray = Grayscale(job.original);
+        auto end = std::chrono::steady_clock::now();
+        job.report.grayscaleDuration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        return job;
+        });
+
+    function_node<ImageJob, ImageJob> edgeNode(g, unlimited, [](ImageJob job) -> ImageJob {
+        auto start = std::chrono::steady_clock::now();
+        job.edges = SobelEdgeDetection(job.gray, 100);
+        auto end = std::chrono::steady_clock::now();
+        job.report.edgeDetectionDuration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        return job;
+        });
+
+    function_node<ImageJob, ImageJob> houghNode(g, unlimited, [](ImageJob job) -> ImageJob {
+        auto start = std::chrono::steady_clock::now();
+        job.accumulator = HoughTransform(job.edges);
+        auto end = std::chrono::steady_clock::now();
+        job.report.houghTransformationDuration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        return job;
+        });
+
+    function_node<ImageJob, ImageJob> lineNode(g, unlimited, [](ImageJob job) -> ImageJob {
+        auto start = std::chrono::steady_clock::now();
+        int threshold = ProcessAccumulatorAndGetThreshold(job.accumulator, job.report);
+        auto concurrent_lines = DetectLines(job.accumulator, threshold);
+        job.lines.assign(concurrent_lines.begin(), concurrent_lines.end());
+        auto end = std::chrono::steady_clock::now();
+        job.report.accumulatorThreshold = threshold;
+        job.report.lineDetectionDuration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        job.report.detectedLinesNum = job.lines.size();
+        return job;
+        });
+
+    function_node<ImageJob, ImageJob> drawNode(g, unlimited, [](ImageJob job) -> ImageJob {
+        job.result = DrawLines(job.original, job.lines, 170, 0, 0);
+        return job;
+        });
+
+    function_node<ImageJob, ImageJob> saveNode(g, 1, [&](ImageJob job) -> ImageJob {
+        std::string resultFolder = outputFolder + "/" + job.imgPath.stem().string();
+        SaveImageToFile(job.gray, resultFolder + "/gray_" + job.imgPath.stem().string());
+        SaveImageToFile(job.edges, resultFolder + "/edge_" + job.imgPath.stem().string());
+        SaveImageToFile(job.result, resultFolder + "/final_" + job.imgPath.stem().string());
+        job.totalEnd = std::chrono::steady_clock::now();
+        job.report.totalProcessingDuration = std::chrono::duration_cast<std::chrono::milliseconds>(job.totalEnd - job.totalStart).count();
+        job.report.Save(resultFolder + "/report.txt");
+        job.report.SaveHistogram(resultFolder + "/histogram.png");
+
+        return job;
+        });
+
+    make_edge(loadNode, grayNode);
+    make_edge(grayNode, edgeNode);
+    make_edge(edgeNode, houghNode);
+    make_edge(houghNode, lineNode);
+    make_edge(lineNode, drawNode);
+    make_edge(drawNode, saveNode);
+
+    std::vector<fs::path> allPaths = FindInputImages(inputFolder);
+
+    for (const auto& path : allPaths) {
+        loadNode.try_put(path);
+    }
+
+    g.wait_for_all();
+
 }
 
 void processImage(fs::path imgPath, std::string outputFolder) {
@@ -94,7 +194,10 @@ int main()
 
     std::string inputFolder = "../Input";
     std::string outputFolder = "../OutputParallel";
-    std::vector<fs::path> imgPaths = FindInputImages(inputFolder);
+
+    processImagesWithFlowGraph(inputFolder, outputFolder);
+
+    /*std::vector<fs::path> imgPaths = FindInputImages(inputFolder);
 
     if (imgPaths.size() == 0) {
         std::cout << "No images found in the Input folder\n";
@@ -132,5 +235,5 @@ int main()
     }
     catch (std::exception e) {
         std::cout << e.what() << std::endl;
-    }
+    }*/
 }
