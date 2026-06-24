@@ -1,0 +1,19 @@
+========================================
+HOUGH TRANSFORM ANALYSIS REPORT
+========================================
+Processing mode: Parallel
+Image title: trotoar
+Image dimensions: 0 x 0, channels: 0
+Accumulator threshold: 562
+
+Timings (milliseconds):
+  Grayscale: 25 ms
+  Edge detection: 87 ms
+  Hough transform: 1346 ms
+  Line detection: 7 ms
+
+(along with loading, and saving)
+Total duration: 4900 ms
+
+Number of lines detected: 2
+========================================

@@ -1,0 +1,19 @@
+========================================
+HOUGH TRANSFORM ANALYSIS REPORT
+========================================
+Processing mode: Serial
+Image title: radni_sto
+Image dimensions: 680 x 451, channels: 3
+Accumulator threshold: 209
+
+Timings (milliseconds):
+  Grayscale: 8 ms
+  Edge detection: 31 ms
+  Hough transform: 115 ms
+  Line detection: 2 ms
+
+(along with loading, and saving)
+Total duration: 337 ms
+
+Number of lines detected: 18
+========================================

@@ -1,0 +1,19 @@
+========================================
+HOUGH TRANSFORM ANALYSIS REPORT
+========================================
+Processing mode: Parallel
+Image title: piramide
+Image dimensions: 0 x 0, channels: 0
+Accumulator threshold: 523
+
+Timings (milliseconds):
+  Grayscale: 10 ms
+  Edge detection: 59 ms
+  Hough transform: 2920 ms
+  Line detection: 9 ms
+
+(along with loading, and saving)
+Total duration: 6156 ms
+
+Number of lines detected: 100
+========================================

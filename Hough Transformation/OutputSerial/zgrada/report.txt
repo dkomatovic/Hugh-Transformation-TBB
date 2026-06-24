@@ -1,0 +1,19 @@
+========================================
+HOUGH TRANSFORM ANALYSIS REPORT
+========================================
+Processing mode: Serial
+Image title: zgrada
+Image dimensions: 1024 x 684, channels: 3
+Accumulator threshold: 479
+
+Timings (milliseconds):
+  Grayscale: 17 ms
+  Edge detection: 68 ms
+  Hough transform: 869 ms
+  Line detection: 4 ms
+
+(along with loading, and saving)
+Total duration: 1661 ms
+
+Number of lines detected: 35
+========================================

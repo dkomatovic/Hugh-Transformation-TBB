@@ -1,0 +1,19 @@
+========================================
+HOUGH TRANSFORM ANALYSIS REPORT
+========================================
+Processing mode: Serial
+Image title: most
+Image dimensions: 768 x 512, channels: 3
+Accumulator threshold: 462
+
+Timings (milliseconds):
+  Grayscale: 12 ms
+  Edge detection: 40 ms
+  Hough transform: 498 ms
+  Line detection: 3 ms
+
+(along with loading, and saving)
+Total duration: 939 ms
+
+Number of lines detected: 16
+========================================
